@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
 
 func main() {
@@ -18,6 +19,10 @@ func main() {
 	li := *p1
 	ch.Sign(p1.Atti.Firstname+" "+p1.Atti.Lastname, "QB", tm, li, 99)
 	fmt.Println(*tm.Roster["QB"], tm.Players[0])
+}
+
+type Person struct {
+	ID int
 }
 
 //*********************** BEGIN TEAM **********************
@@ -50,12 +55,14 @@ func createTeam(name string) (*Team, error) {
 //*********************** END TEAM **********************
 
 type Manager struct {
+	Level     float32
 	FirstName string
 	LastName  string
 	Type      string
 	Team      string
 	CanHire   bool
 	CanFire   bool
+	Person
 }
 
 func createManager(fname, lname string) *Manager {
@@ -66,16 +73,32 @@ func createManager(fname, lname string) *Manager {
 	return man
 }
 
+func (man *Manager) SignHeadCoach(coach *Coach, team *Team) error {
+	upper := strings.ToUpper("head coach")
+	if coach.Atti.TypeOfCoach != upper {
+		flag := errors.New("FLAG!!! You Can Not Sign This Person!")
+		return flag
+	} else {
+		team.Coaches = append(team.Coaches, coach)
+	}
+	return nil
+}
+
+//TEST MANAGER
+
 //***********************Begin Coach**********************
 
 //Defines COACH type to be used on/in leagues/teams.
 type Coach struct {
-	Atti CAttributes
-	Team string
+	Level float32
+	Atti  CAttributes
+	Team  string
 }
 
 // Values for Coach object
 type CAttributes struct {
+	ID int
+	Person
 	FirstName        string
 	LastName         string
 	CoachingStyle    string
@@ -133,6 +156,8 @@ func (coach *Coach) Cut(name, pos string, team *Team, player *Athelete) {
 
 //Defines Athelete type to be used on/in leagues/teams.
 type Athelete struct {
+	Level float32
+	Person
 	Atti Attributes
 	Team string
 }
