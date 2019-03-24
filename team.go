@@ -4,56 +4,29 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
-	"strings"
+	//"log"
+	//"strings"
 )
 
 func main() {
+	//man := createManager("jjg", "")
 	p1 := createPlayer("mr", "bryant", "hithere")
+
 	fmt.Println(p1.Team)
-	ch := createCoach("ty", "law", "players coach")
-	tm, err := createTeam("noles")
-	if err != nil {
-		log.Println(err)
-	}
-	li := *p1
-	ch.Sign(p1.Atti.Firstname+" "+p1.Atti.Lastname, "QB", tm, li, 99)
-	fmt.Println(*tm.Roster["QB"], tm.Players[0])
-}
-
-type Person struct {
-	ID int
-}
-
-//*********************** BEGIN TEAM **********************
-
-//Team object. You must call createTeam and initialize it with a name
-type Team struct {
-	Name            string
-	UpperManagement []*Manager
-	Players         []*Athelete
-	Coaches         []*Coach
-	Roster          map[string]*Athelete
-}
-
-//Returns a pointer to a Team struct, initialized with a name
-func createTeam(name string) (*Team, error) {
-	m := make(map[string]*Athelete)
-	if name == "" {
-		err := errors.New("Enter a name.")
-		return nil, err
-	} else {
-		team := &Team{
-			Name:   name,
-			Roster: m,
-		}
-		return team, nil
-	}
+	ch := createCoach("ty", "law", "noles")
+	ch.Atti.TypeOfCoach = "Head Coach"
+	owner := createOwner("Dajovan", "Bryant", "killers")
+	owner.SetSalary(100000.99)
+	commish := createCommish("justin", "Timberlake")
+	fmt.Println(p1.Salary)
+	fmt.Println(owner, owner.Team, commish)
+	fmt.Printf("%T\n", owner)
+	p1.Fine(90.88)
+	fmt.Println(p1.Salary)
 
 }
 
-//*********************** END TEAM **********************
-
+//********************************    BEGIN MANAGER    **************************************************
 type Manager struct {
 	Level     float32
 	FirstName string
@@ -62,9 +35,10 @@ type Manager struct {
 	Team      string
 	CanHire   bool
 	CanFire   bool
-	Person
+	Salary    float32
 }
 
+//////////////////////////////////////////////////////////////////////////
 func createManager(fname, lname string) *Manager {
 	man := &Manager{
 		FirstName: fname,
@@ -73,9 +47,10 @@ func createManager(fname, lname string) *Manager {
 	return man
 }
 
+//////////////////////////////////////////////////////////////////
 func (man *Manager) SignHeadCoach(coach *Coach, team *Team) error {
-	upper := strings.ToUpper("head coach")
-	if coach.Atti.TypeOfCoach != upper {
+
+	if coach.Atti.TypeOfCoach != "Head Coach" {
 		flag := errors.New("FLAG!!! You Can Not Sign This Person!")
 		return flag
 	} else {
@@ -84,21 +59,27 @@ func (man *Manager) SignHeadCoach(coach *Coach, team *Team) error {
 	return nil
 }
 
-//TEST MANAGER
+/////////////////////////////////////////////////////////////////
+func (manager *Manager) Trade(player *Athelete, team *Team) {
 
-//***********************Begin Coach**********************
+}
+
+////////////////////////////////////////////////////////////////
+//************************    END MANAGER    **********************************************************
+
+//***********************    BEGIN COACH    ***********************************************************
 
 //Defines COACH type to be used on/in leagues/teams.
 type Coach struct {
-	Level float32
-	Atti  CAttributes
-	Team  string
+	Salary float32
+	Level  float32
+	Atti   CAttributes
+	Team   string
 }
 
+////////////////////////////////////////////////////////////////////
 // Values for Coach object
 type CAttributes struct {
-	ID int
-	Person
 	FirstName        string
 	LastName         string
 	CoachingStyle    string
@@ -111,6 +92,7 @@ type CAttributes struct {
 	TypeOfCoach      string
 }
 
+//////////////////////////////////////////////////////////////////////
 //Creates a Coach object with at least the first and last name. The team is optional. Usually upon creation,
 //you will not set the team property. If left emty, it will default to n/a.
 func createCoach(Fname, Lname, team string) *Coach {
@@ -132,7 +114,8 @@ func createCoach(Fname, Lname, team string) *Coach {
 	return coach
 }
 
-//Sign function adds Athelete to a roster. It also makes the player.Team variable equal to team.Name
+/////////////////////////////////////////////////////////////////////
+//Sign function adds Athelete to a roster. It also makes the player.Team variable equal to team.Name by default.
 func (coach *Coach) Sign(name, pos string, team *Team, player Athelete, jersey int) {
 	team.Players = append(team.Players, &player)
 	nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
@@ -143,6 +126,8 @@ func (coach *Coach) Sign(name, pos string, team *Team, player Athelete, jersey i
 	team.Roster[pos] = &player
 
 }
+
+//////////////////////////////////////////////////////////////
 func (coach *Coach) Cut(name, pos string, team *Team, player *Athelete) {
 	nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
 	name = nm1
@@ -150,18 +135,30 @@ func (coach *Coach) Cut(name, pos string, team *Team, player *Athelete) {
 	player.Team = "Free Agent"
 }
 
-//***********************End Coach**********************
+//////////////////////////////////////////////////////////////
+func (coach *Coach) GiveSpeach() {
 
-//***********************Begin Athelete**********************
+}
+
+//////////////////////////////////////////////////////////////
+func (coach *Coach) Trade(player *Athelete, team *Team) {
+
+}
+
+///////////////////////////////////////////////////////////////
+//***********************    END COACH    ***************************************************************
+
+//***********************    BEGIN ATHELETE    ***********************************************************
 
 //Defines Athelete type to be used on/in leagues/teams.
 type Athelete struct {
-	Level float32
-	Person
-	Atti Attributes
-	Team string
+	Salary float32
+	Level  float32
+	Atti   Attributes
+	Team   string
 }
 
+////////////////////////////////////////////////////////////////
 //Creates an Athelete that must be initialized with First and Last name values. All other values are modified after player creation.
 //The default value for team is Undrafted if team field is empty
 func createPlayer(fname, lname, team string) *Athelete {
@@ -182,6 +179,24 @@ func createPlayer(fname, lname, team string) *Athelete {
 	return player1
 }
 
+////////////////////////////////////////////////////////////////
+//Implement play
+func (player *Athelete) Play() {
+
+}
+
+///////////////////////////////////////////////////////////////
+//implement train
+func (player *Athelete) Train() {
+
+}
+
+///////////////////////////////////////////////////////////////
+func (player *Athelete) Tweet() {
+
+}
+
+///////////////////////////////////////////////////////////////
 //Attribute struct belonging to all atheletes. Must call createPlayer.
 type Attributes struct {
 	Firstname string
@@ -204,4 +219,179 @@ type Attributes struct {
 	Team      string
 }
 
-//***********************End Athelete **********************
+/////////////////////////////////////////////////////////////////
+//***********************    END ATHELETE   ****************************************************************
+
+//***********************    BEGIN OWNER    ******************************************************************
+
+type Owner struct {
+	Level     float32
+	FirstName string
+	LastName  string
+	Team      *Team
+	Age       int
+	Salary    float32
+}
+
+/////////////////////////////////////////////////////////////////
+func createOwner(fname, lname, tname string) *Owner {
+
+	owner := &Owner{
+
+		FirstName: fname,
+		LastName:  lname,
+	}
+	kl, _ := owner.createTeam(tname)
+	owner.Team = kl
+	return owner
+}
+
+//////////////////////////////////////////////////////////////////
+//Returns a pointer to a Team struct, initialized with a name.
+func (owner *Owner) createTeam(name string) (*Team, error) {
+	m := make(map[string]*Athelete)
+	if name == "" {
+		err := errors.New("Enter a name.")
+		return nil, err
+	} else {
+		team := &Team{
+			Name:   name,
+			Roster: m,
+		}
+		owner.Team = team
+		return team, nil
+	}
+
+}
+
+/////////////////////////////////////////////////////////////////////
+func (owner *Owner) PayPeople(lm LeagueMember, amount float32) {
+
+}
+
+///////////////////////////////////////////////////////////////////
+func (owner *Owner) Tweet() {
+
+}
+
+//////////////////////////////////////////////////////////////////////
+//****************************    End  Owner    ******************************************************************
+//***********************   BEGIN TEAM   *********************************************************************
+
+//Team object. You must call createTeam and initialize it with a name. It is called in the createOwner function by default.
+type Team struct {
+	Name            string
+	UpperManagement []*Manager
+	Players         []*Athelete
+	Coaches         []*Coach
+	Roster          map[string]*Athelete
+}
+
+//***********************   END TEAM   ***********************************************************************
+//***********************    BEGIN COMMISSIONER    ***************************************************************
+type Commissioner struct {
+	Level     float32
+	FirstName string
+	LastName  string
+	Age       int
+}
+
+///////////////////////////////////////////////////////////////////////
+func createCommish(fname, lname string) *Commissioner {
+
+	commish := &Commissioner{
+		FirstName: fname,
+		LastName:  lname,
+	}
+	return commish
+}
+
+//////////////////////////////////////////////////////////////////////
+func (comish *Commissioner) Fine(lm LeagueMember, amount float32, reason string) {
+	lvl := lm.GetLevel()
+	switch lvl {
+	case 5:
+		lm.Fine(54.44)
+		fmt.Println(lm)
+
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////
+//************************    BEGIN LEAGUE    ************************************************************************
+
+//League struct is a generic struct for a League object.
+type League struct {
+	LeagueType   struct{}
+	Commissioner Commissioner
+	Owners       []*Owner
+}
+
+//***********************     END LEAGUE      ***************************************************************************
+//*************************       BEGIN LEAGUE MEMBER   *****************************************************************
+//LeagueMember Interface describes common functionality between all league members.
+type LeagueMember interface {
+	SetSalary(amount float32)
+	Tweet()
+	GetLevel() float32
+	Fine(amount float32)
+}
+
+/////////////////////////////////////////////////////////////////////////////
+func (player *Athelete) GetLevel() float32 {
+	return player.Level
+}
+
+func (player *Athelete) SetSalary(amount float32) {
+	player.Salary = amount
+
+}
+func (player *Athelete) Fine(amount float32) {
+	player.SetSalary((player.Salary - amount))
+}
+
+/////////////////////////////////////////////////////////////////////////////
+func (manager *Manager) GetLevel() float32 {
+	return manager.Level
+}
+func (manager *Manager) SetSalary(amount float32) {
+	manager.Salary = amount
+
+}
+func (manager *Manager) Fine(amount float32) {
+	manager.Salary += manager.Salary - amount
+}
+
+/////////////////////////////////////////////////////////////////////////////
+func (coach *Coach) GetLevel() float32 {
+	return coach.Level
+}
+
+func (coach *Coach) SetSalary(amount float32) {
+	coach.Salary = amount
+
+}
+func (coach *Coach) Fine(amount float32) {
+	coach.Salary += coach.Salary - amount
+}
+
+/////////////////////////////////////////////////////////////////////////////
+func (commish *Commissioner) GetLevel() float32 {
+	return commish.Level
+}
+
+/////////////////////////////////////////////////////////////////////////////
+func (owner *Owner) GetLevel() float32 {
+	return owner.Level
+}
+
+func (owner *Owner) SetSalary(amount float32) {
+	owner.Salary = amount
+
+}
+func (owner *Owner) Fine(amount float32) {
+	owner.Salary += owner.Salary - amount
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//*********************    End League Member    ******************************************************************
