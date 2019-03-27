@@ -2,6 +2,7 @@
 package main
 
 import (
+	
 	"errors"
 	"fmt"
 	//"log"
@@ -23,11 +24,12 @@ func main() {
 //*
 //********************************    BEGIN MANAGER    **************************************************
 type Manager struct {
+	*Team
 	Level     float32
 	FirstName string
 	LastName  string
 	Type      string
-	Team      string
+	TeamName  string
 	CanHire   bool
 	CanFire   bool
 	Salary    float32
@@ -43,20 +45,27 @@ func createManager(fname, lname string) *Manager {
 }
 
 //////////////////////////////////////////////////////////////////
+//Function to sign Head Coach. **Must be a General Manager.
 func (man *Manager) SignHeadCoach(coach *Coach, team *Team) error {
 	genmanager := strings.ToUpper(man.Type)
 	if coach.Atti.TypeOfCoach != "Head Coach" && man.Type != genmanager {
 		flag := errors.New("FLAG!!! You Can Not Sign This Person!")
 		return flag
 	} else {
+		coach.Team = man.Team
 		team.Coaches = append(team.Coaches, coach)
+
 	}
 	return nil
 }
 
 /////////////////////////////////////////////////////////////////
-func (manager *Manager) Trade(player *Athelete, team *Team) {
+func (manager *Manager) Fire(coach *Coach, reason string) {
+	coach.Team = nil
 
+}
+func (manager *Manager) SetSalary(amount float32) {
+	manager.Salary = amount
 }
 
 ////////////////////////////////////////////////////////////////
@@ -67,10 +76,11 @@ func (manager *Manager) Trade(player *Athelete, team *Team) {
 
 //Defines COACH type to be used on/in leagues/teams.
 type Coach struct {
-	Salary float32
-	Level  float32
-	Atti   CAttributes
-	Team   string
+	*Team
+	Salary   float32
+	Level    float32
+	Atti     CAttributes
+	TeamName string
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -106,7 +116,7 @@ func createCoach(Fname, Lname, team string) *Coach {
 			FirstName: Fname,
 			LastName:  Lname,
 		},
-		Team: team,
+		Team: nil,
 	}
 
 	return coach
@@ -116,13 +126,15 @@ func createCoach(Fname, Lname, team string) *Coach {
 
 //Sign function adds Athelete to a roster. It also makes the player.Team variable equal to team.Name by default.
 func (coach *Coach) Sign(name, pos string, team *Team, player Athelete, jersey int) {
+	player.Team = coach.Team
 	team.Players = append(team.Players, &player)
 	nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
 	player.Atti.JerseyNum = jersey
-	player.Team = team.Name
+	player.Team = coach.Team
 	name = nm1
 	player = (player)
 	team.Roster[pos] = &player
+	player.Atti.Team = player.Team.Name
 
 }
 
@@ -132,13 +144,14 @@ func (coach *Coach) Cut(name, pos string, team *Team, player *Athelete) {
 	nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
 	name = nm1
 	team.Roster[pos] = nil
-	player.Team = "Free Agent"
+	player.TeamName = "Free Agent"
+	player.Team = nil
 }
 
 ////////////////////////////////////////////////////////////////////
 
-func (coach *Coach) GiveSpeach() {
-
+func (coach *Coach) GiveSpeach(speach string) string {
+	return speach
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -154,6 +167,9 @@ func (coach *Coach) MakeTradeReq(requester *Coach, personPpl2Trade *Athelete, mo
 	}
 	approver.Atti.Requests = append(approver.Atti.Requests, TR)
 }
+func (coach *Coach) SetSalary(amount float32) {
+	coach.Salary = amount
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -164,10 +180,11 @@ func (coach *Coach) MakeTradeReq(requester *Coach, personPpl2Trade *Athelete, mo
 
 //Defines Athelete type to be used on/in leagues/teams.
 type Athelete struct {
-	Salary float32
-	Level  float32
-	Atti   Attributes
-	Team   string
+	*Team
+	Salary   float32
+	Level    float32
+	Atti     Attributes
+	TeamName string
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -175,6 +192,7 @@ type Athelete struct {
 //Creates an Athelete that must be initialized with First and Last name values. All other values are modified after player creation.
 //The default value for team is Undrafted if team field is empty
 func createPlayer(fname, lname, team string) *Athelete {
+	team = ""
 	if team == "" {
 		player1 := &Athelete{
 			Team: "Undrafted",
@@ -182,7 +200,7 @@ func createPlayer(fname, lname, team string) *Athelete {
 		return player1
 	}
 	player1 := &Athelete{
-		Team: team,
+		Team: nil,
 		Atti: Attributes{
 			Firstname: fname,
 			Lastname:  lname,
@@ -193,7 +211,7 @@ func createPlayer(fname, lname, team string) *Athelete {
 }
 
 ////////////////////////////////////////////////////////////////////
-
+//Define structs for these methods
 //Implement play
 func (player *Athelete) Play() {
 
@@ -210,6 +228,9 @@ func (player *Athelete) Train() {
 
 func (player *Athelete) Tweet() {
 
+}
+func (player1 *Athelete) SetSalary(amount float32) {
+	player1.Salary = amount
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -285,6 +306,10 @@ func (owner *Owner) createTeam(name string) (*Team, error) {
 
 }
 
+func (owner *Owner) SignGM(gm *Manager) {
+	gm.Team = owner.Team
+}
+
 ////////////////////////////////////////////////////////////////////
 
 func (owner *Owner) PayPeople(lm LeagueMember, amount float32) {
@@ -295,6 +320,9 @@ func (owner *Owner) PayPeople(lm LeagueMember, amount float32) {
 
 func (owner *Owner) Tweet() {
 
+}
+func (owner *Owner) SetSalary(amount float32) {
+	owner.Salary = amount
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -337,14 +365,11 @@ func createCommish(fname, lname string) *Commissioner {
 
 ////////////////////////////////////////////////////////////////////
 
-func (comish *Commissioner) Fine(lm LeagueMember, amount float32, reason string) {
-	lvl := lm.GetLevel()
-	switch lvl {
-	case 5:
-		lm.Fine(54.44)
-		fmt.Println(lm)
-
-	}
+func (comish *Commissioner) Fine(lm *LeagueMember, amount float32, reason string) string {
+	var lm1 LeagueMember
+	lm1 = *lm
+	lm1.Fine(amount)
+	return fmt.Sprintf("You've been fined %d by the commisioner: %s", amount, reason)
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -379,13 +404,6 @@ func (player *Athelete) GetLevel() float32 {
 
 ////////////////////////////////////////////////////////////////////
 
-func (player *Athelete) SetSalary(amount float32) {
-	player.Salary = amount
-
-}
-
-////////////////////////////////////////////////////////////////////
-
 func (player *Athelete) Fine(amount float32) {
 	player.SetSalary((player.Salary - amount))
 }
@@ -398,13 +416,6 @@ func (manager *Manager) GetLevel() float32 {
 
 ////////////////////////////////////////////////////////////////////
 
-func (manager *Manager) SetSalary(amount float32) {
-	manager.Salary = amount
-
-}
-
-////////////////////////////////////////////////////////////////////
-
 func (manager *Manager) Fine(amount float32) {
 	manager.Salary += manager.Salary - amount
 }
@@ -413,13 +424,6 @@ func (manager *Manager) Fine(amount float32) {
 
 func (coach *Coach) GetLevel() float32 {
 	return coach.Level
-}
-
-////////////////////////////////////////////////////////////////////
-
-func (coach *Coach) SetSalary(amount float32) {
-	coach.Salary = amount
-
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -444,13 +448,6 @@ func (owner *Owner) GetLevel() float32 {
 
 ////////////////////////////////////////////////////////////////////
 
-func (owner *Owner) SetSalary(amount float32) {
-	owner.Salary = amount
-
-}
-
-////////////////////////////////////////////////////////////////////
-
 func (owner *Owner) Fine(amount float32) {
 	owner.Salary += owner.Salary - amount
 }
@@ -460,7 +457,7 @@ func (owner *Owner) Fine(amount float32) {
 //*********************    End League Member    ******************************************************************
 //**
 //**
-
+//*********************    Begin TradeReq  ***********************************************************************
 type TradeRequest struct {
 	Coach       *Coach
 	ProposeThis *Athelete
@@ -493,3 +490,50 @@ func (tr *TradeRequest) ShowRequest() string {
 }
 
 ////////////////////////////////////////////////////////////////////
+
+type Complaint struct {
+	From  *LeagueMember
+	About *LeagueMember
+	Issue string
+}
+///////////////////////////////////////////////////////////////////
+func CreateComplaint(from,about *LeagueMember,issue string)  *Complaint{
+	switch from.(type){
+	case *main.ATHELETE:
+		from=*main.ATHELETE.Atti.FirstName
+	case *main.COACH:
+		from=*main.COACH.CAttributes.FirstName
+	case *main.MANAGER:
+		from=*main.MANAGER.FirstName
+	case *main.OWNER:
+		from=*main.OWNER.FirstName
+	}
+
+	switch about.(type) {
+	case *main.ATHELETE:
+		about=*main.ATHELETE.Atti.FirstName
+	case *main.COACH:
+		about=*main.COACH.CAttributes.FirstName
+	case *main.MANAGER:
+		about=*main.MANAGER.FirstName
+	case *main.OWNER:
+		about=*main.OWNER.FirstName
+		
+	}
+
+	comp:=&Complaint{
+		From:from,
+		About:about,
+		Issue:issue,
+	}
+	return comp
+}
+//////////////////////////////////////////////////////////////////
+func (complain *Complaint) ShowComplaint() string{
+return fmt.Sprintf(`
+		 **********Complaint**********
+		 From: %v
+		 About:%v
+		 Issue:%v
+`,complain.From.)
+}
