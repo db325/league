@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type Manager struct {
 	*Team
 	AccountBalance float32

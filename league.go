@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 //************************    BEGIN LEAGUE    ************************************************************************
 
 //League struct is a generic struct for a League object.

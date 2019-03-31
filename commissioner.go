@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 //***********************    BEGIN COMMISSIONER    ***********************************************************
 type Commissioner struct {
 	Level        float32

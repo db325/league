@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type Trainer struct {
 	FirstName string
 	LastName  string
@@ -36,3 +40,9 @@ func (trainer *Trainer) IsTraining() bool {
 func (trainer *Trainer) GetKind() string {
 	return trainer.Kind
 }
+
+const (
+	SA = "Speed/Agilty"
+	SC = "Strength/Conditioning"
+	AE = "Accuracy/Endurance"
+)
