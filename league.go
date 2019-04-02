@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	//"time"
 )
 
 //************************    BEGIN LEAGUE    ************************************************************************
@@ -22,9 +23,12 @@ type LeagueMember interface {
 	GetName() string
 	SetSalary(amount float32)
 	MediaPost(message *Message, board *Board)
+	SetActive(yn bool)
 	GetLevel() float32
 	Fine(amount float32)
 	Pay(amount float32)
+	SendSlip(slip *Slip)
+	GetSlips() []string
 }
 
 type Complaint struct {
@@ -56,3 +60,16 @@ func (complain *Complaint) ShowComplaint() string {
 	
 	`, complain.From, complain.About, complain.Issue)
 }
+
+type Eligible struct {
+	Slips      []*Slip
+	LMActive   bool
+	Reason     string
+	ReturnDate int64
+}
+
+const (
+	DR      = "Doctor"
+	Fine    = "Fine"
+	Suspend = "Suspension"
+)

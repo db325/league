@@ -12,6 +12,7 @@ type Athelete struct {
 	Atti           Attributes
 	TeamName       string
 	AccountBalance float32
+	Eligible       Eligible
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -27,6 +28,12 @@ func createPlayer(fname, lname, team string) *Athelete {
 		return player1
 	}
 	player1 := &Athelete{
+		Eligible: Eligible{
+			Reason:     "",
+			Slips:      make([]*Slip, 10, 30),
+			LMActive:   true,
+			ReturnDate: 0,
+		},
 		Team: nil,
 		Atti: Attributes{
 			Firstname: fname,
@@ -87,6 +94,11 @@ func (player1 *Athelete) SetSalary(amount float32) {
 func (player *Athelete) GetLevel() float32 {
 	return player.Level
 }
+func (player *Athelete) Pay(amount float32) {
+	PayAmount := player.Salary / 12
+	player.AccountBalance += PayAmount
+
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -123,6 +135,32 @@ type Attributes struct {
 	JerseyNum int
 	Position  string
 	Team      string
+}
+
+func (player *Athelete) SetActive(yn bool) {
+	if yn == true {
+		player.Eligible.LMActive = true
+
+	} else if yn == false {
+		player.Eligible.LMActive = false
+	}
+
+}
+
+func (player *Athelete) SendSlip(slip *Slip) {
+	player.Eligible.Slips = append(player.Eligible.Slips, slip)
+	return
+}
+func (player *Athelete) GetSlips() []string {
+	arr := []string{}
+	for _, v := range player.Eligible.Slips {
+		arr = append(arr, v.Show())
+		// v.Show()
+
+	}
+
+	return arr
+
 }
 
 ////////////////////////////////////////////////////////////////////

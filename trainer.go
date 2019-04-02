@@ -12,6 +12,7 @@ type Trainer struct {
 	Price     float32
 	Training  bool
 	Rating    float32
+	Eligible  *Eligible
 }
 
 func CreateTrainer(fname, lname string, age int, kind string, price float32) *Trainer {
@@ -46,3 +47,13 @@ const (
 	SC = "Strength/Conditioning"
 	AE = "Accuracy/Endurance"
 )
+
+func (trainer *Trainer) SetActive(yn bool) {
+	if yn == true {
+		trainer.Eligible.LMActive = true
+
+	} else if yn == false {
+		trainer.Eligible.LMActive = false
+	}
+
+}

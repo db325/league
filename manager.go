@@ -15,6 +15,7 @@ type Manager struct {
 	CanHire        bool
 	CanFire        bool
 	Salary         float32
+	Eligible       *Eligible
 }
 
 //////////////////////////////////////////////////////////////////////////

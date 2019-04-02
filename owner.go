@@ -14,6 +14,7 @@ type Owner struct {
 	Age            int
 	Salary         float32
 	AccountBalance float32
+	Eligible       *Eligible
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -97,6 +98,16 @@ func (owner *Owner) GetLevel() float32 {
 }
 func (owner *Owner) Fine(amount float32) {
 	owner.Salary += owner.Salary - amount
+}
+
+func (owner *Owner) SetActive(yn bool) {
+	if yn == true {
+		owner.Eligible.LMActive = true
+
+	} else if yn == false {
+		owner.Eligible.LMActive = false
+	}
+
 }
 
 ////////////////////////////////////////////////////////////////////

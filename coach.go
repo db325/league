@@ -15,6 +15,7 @@ type Coach struct {
 	Atti           CAttributes
 	TeamName       string
 	AccountBalance float32
+	Eligible       *Eligible
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -89,6 +90,7 @@ func (coach *Coach) Sign(name, pos string, team *Team, player *Athelete, jersey 
 	player = (player)
 	player.Team.Players = append(player.Team.Players, player)
 	player.Atti.Team = player.Team.Name
+	//player.SetActive(false)
 
 }
 
@@ -148,6 +150,15 @@ func (coach *Coach) GetLevel() float32 {
 }
 
 func (coach *Coach) CreateComplaint(from, about *LeagueMember, commish *Commissioner, issue string) {
+
+}
+func (coach *Coach) SetActive(yn bool) {
+	if yn == true {
+		coach.Eligible.LMActive = true
+
+	} else if yn == false {
+		coach.Eligible.LMActive = false
+	}
 
 }
 
