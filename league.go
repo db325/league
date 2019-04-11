@@ -9,9 +9,9 @@ import (
 
 //League struct is a generic struct for a League object.
 type League struct {
-	LeagueType   struct{}
-	Commissioner Commissioner
+	Commissioner *Commissioner
 	Owners       []*Owner
+	MessBoard    []*Message
 }
 
 //***********************     END LEAGUE      ***************************************************************************
@@ -22,13 +22,14 @@ type League struct {
 type LeagueMember interface {
 	GetName() string
 	SetSalary(amount float32)
-	MediaPost(message *Message, board *Board)
+	MediaPost(t, m string, v bool)
 	SetActive(yn bool)
 	GetLevel() float32
 	Fine(amount float32)
 	Pay(amount float32)
 	SendSlip(slip *Slip)
-	GetSlips() []string
+	GetSlips() []*Slip
+	CheckSuspension()
 }
 
 type Complaint struct {
@@ -73,3 +74,33 @@ const (
 	Fine    = "Fine"
 	Suspend = "Suspension"
 )
+
+//Message struct represents a social media post item
+type Message struct {
+	Title   string
+	Message string
+	Visible bool
+}
+
+//Board struct is where Message structs are appended
+type Board struct {
+	Name  string
+	Posts []*Message
+}
+
+/////////////////////////////////////////////
+type LeagueType struct {
+	League *League
+	Type   string
+	Game   *Game
+}
+
+type Game struct {
+	TeamSize int
+	Rules    *Rules
+}
+
+type Rules struct {
+	Penalty int
+	Points  int
+}

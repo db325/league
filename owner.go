@@ -19,16 +19,20 @@ type Owner struct {
 
 ////////////////////////////////////////////////////////////////////
 
-func createOwner(fname, lname, tname string) *Owner {
+func createOwner(fname, lname, tname string) (*Owner, error) {
+	if fname == "" || lname == "" {
+		err := errors.New("You must enter a first and last name.")
+		return nil, err
+	} else {
+		owner := &Owner{
 
-	owner := &Owner{
-
-		FirstName: fname,
-		LastName:  lname,
+			FirstName: fname,
+			LastName:  lname,
+		}
+		kl, _ := owner.CreateTeam(tname)
+		owner.Team = kl
+		return owner, nil
 	}
-	kl, _ := owner.CreateTeam(tname)
-	owner.Team = kl
-	return owner
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -42,6 +46,7 @@ type Team struct {
 	Players         []*Athelete
 	Coaches         []*Coach
 	Roster          map[string]*Athelete
+	MessBoard       []*Message
 }
 
 //***********************   END TEAM   ***********************************************************************
@@ -50,6 +55,15 @@ type Team struct {
 
 //createTeam Returns a pointer to a Team struct, initialized with a name.
 func (owner *Owner) CreateTeam(name string) (*Team, error) {
+
+	Eligible := &Eligible{
+		Slips:      make([]*Slip, 0, 30),
+		LMActive:   true,
+		Reason:     "",
+		ReturnDate: 0,
+	}
+	owner.Eligible = Eligible
+
 	m := make(map[string]*Athelete)
 	if name == "" {
 		err := errors.New("Enter a name.")
@@ -79,8 +93,17 @@ func (owner *Owner) Pay(amount float32) {
 
 }
 
-func (owner *Owner) MediaPost(message *Message, board *Board) {
-
+func (owner *Owner) MediaPost(t, m string, v bool) {
+	Message := &Message{
+		Title:   t,
+		Message: m,
+		Visible: v,
+	}
+	if v == true {
+		//IMPLEMENT LEAGUE BOARD
+	} else if v == false {
+		owner.Team.MessBoard = append(owner.Team.MessBoard, Message)
+	}
 }
 
 func (owner *Owner) SetSalary(amount float32) {
@@ -108,6 +131,18 @@ func (owner *Owner) SetActive(yn bool) {
 		owner.Eligible.LMActive = false
 	}
 
+}
+
+func (owner *Owner) SendSlip(slip *Slip) {
+	owner.Eligible.Slips = append(owner.Eligible.Slips, slip)
+}
+
+func (owner *Owner) GetSlips() []*Slip {
+	slips := []*Slip{}
+	for _, val := range owner.Eligible.Slips {
+		slips = append(slips, val)
+	}
+	return slips
 }
 
 ////////////////////////////////////////////////////////////////////

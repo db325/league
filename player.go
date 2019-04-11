@@ -1,6 +1,9 @@
 package main
 
-import ()
+import (
+	"fmt"
+	"time"
+)
 
 /***********************    BEGIN ATHELETE    ***********************************************************/
 
@@ -72,17 +75,6 @@ func (player *Athelete) Train(trainer *Trainer) {
 
 ////////////////////////////////////////////////////////////////////
 
-type Message struct {
-	Title   string
-	Message string
-	Visible bool
-}
-
-type Board struct {
-	Name  string
-	Posts []*Message
-}
-
 func (player *Athelete) MediaPost(message *Message, board *Board) {
 	board.Posts = append(board.Posts, message)
 
@@ -151,15 +143,24 @@ func (player *Athelete) SendSlip(slip *Slip) {
 	player.Eligible.Slips = append(player.Eligible.Slips, slip)
 	return
 }
-func (player *Athelete) GetSlips() []string {
-	arr := []string{}
+func (player *Athelete) GetSlips() []*Slip {
 	for _, v := range player.Eligible.Slips {
-		arr = append(arr, v.Show())
-		// v.Show()
-
+		v.SetTimeLeft()
 	}
 
-	return arr
+	return player.Eligible.Slips
+
+}
+func (player *Athelete) CheckSuspension() {
+	for i := 0; i < len(player.Eligible.Slips); i++ {
+		if player.Eligible.Slips[i].SActive == true {
+			now := time.Now()
+			player.Eligible.Slips[i].TimeLeft = player.Eligible.Slips[i].Time2Chech.Sub(now)
+			//CREATE CUSTOM ERRORS
+			fmt.Println("you cant do that because:", player.Eligible.Slips[i])
+
+		}
+	}
 
 }
 

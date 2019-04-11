@@ -10,6 +10,7 @@ import (
 //Defines COACH type to be used on/in leagues/teams.
 type Coach struct {
 	*Team
+
 	Salary         float32
 	Level          float32
 	Atti           CAttributes
@@ -62,6 +63,7 @@ func (tr *TradeRequest) ShowRequest() string {
 	return req
 }
 
+//*********************************************************************************
 //Creates a Coach object with at least the first and last name. The team is optional. Usually upon creation,
 //you will not set the team property. If left emty, it will default to n/a.
 func createCoach(Fname, Lname string) *Coach {
@@ -140,7 +142,18 @@ func (coach *Coach) GetName() string {
 
 	return name
 }
-func (coach *Coach) MediaPost(message *Message, board *Board) {
+func (coach *Coach) MediaPost(t, m string, v bool) {
+	MP := &Message{
+		Title:   t,
+		Message: m,
+		Visible: v,
+	}
+	if v == true {
+		//IMPLEMENT LEAGUE BOARD
+	} else if v == false {
+		coach.Team.MessBoard = append(coach.Team.Posts, MP)
+
+	}
 
 }
 
@@ -149,19 +162,27 @@ func (coach *Coach) GetLevel() float32 {
 	return coach.Level
 }
 
-func (coach *Coach) CreateComplaint(from, about *LeagueMember, commish *Commissioner, issue string) {
-
-}
-func (coach *Coach) SetActive(yn bool) {
-	if yn == true {
-		coach.Eligible.LMActive = true
-
-	} else if yn == false {
-		coach.Eligible.LMActive = false
+func (coach *Coach) CreateComplaint(from, about LeagueMember, commish *Commissioner, issue string) {
+	Complaint := &Complaint{
+		From:  from.GetName(),
+		About: about.GetName(),
+		Issue: issue,
 	}
 
+	commish.Complaints = append(commish.Complaints, Complaint)
+}
+func (coach *Coach) SetActive(yn bool) {
+	coach.Eligible.LMActive = yn
+}
+
+//SendSlip func appends a slip to the Coach's []*Slips
+func (coach *Coach) SendSlip(slip *Slip) {
+	coach.Eligible.Slips = append(coach.Eligible.Slips, slip)
+}
+
+func (coach *Coach) GetSlips() []*Slip {
+
+	return coach.Eligible.Slips
 }
 
 ////////////////////////////////////////////////////////////////////
-
-//***********************    END COACH    ***************************************************************

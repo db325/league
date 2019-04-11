@@ -35,6 +35,15 @@ func (man *Manager) SignCoach(coach *Coach) {
 
 	coach.Team = man.Team
 	coach.Team.Coaches = append(coach.Team.Coaches, coach)
+	// Elig:=&Eligible{
+
+	// }
+	coach.Eligible = &Eligible{
+		Slips:      make([]*Slip, 0),
+		LMActive:   true,
+		Reason:     "",
+		ReturnDate: 0,
+	}
 
 	fmt.Print(man.Team)
 
@@ -62,8 +71,17 @@ func (manager *Manager) Fine(amount float32) {
 func (manager *Manager) GetLevel() float32 {
 	return manager.Level
 }
-func (manager *Manager) MediaPost(message *Message, board *Board) {
-
+func (manager *Manager) MediaPost(t, m string, v bool) {
+	Message := &Message{
+		Title:   t,
+		Message: m,
+		Visible: v,
+	}
+	if v == true {
+		//IMPLEMENT LEAGUE BOARD
+	} else if v == false {
+		manager.Team.MessBoard = append(manager.Team.MessBoard, Message)
+	}
 }
 func (manager *Manager) GetName() string {
 
@@ -76,3 +94,6 @@ func (manager *Manager) Pay(amount float32) {
 }
 
 ///////////////////////// *****End Interface Implementation********** ///////////////////////////////////////////
+func (manager *Manager) SendSlip(slip *Slip) {
+
+}
