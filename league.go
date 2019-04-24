@@ -24,12 +24,14 @@ type LeagueMember interface {
 	SetSalary(amount float32)
 	MediaPost(t, m string, v bool)
 	SetActive(yn bool)
-	GetLevel() float32
+	GetLevel() int
 	Fine(amount float32)
-	Pay(amount float32)
+	Pay()
 	SendSlip(slip *Slip)
-	GetSlips() []*Slip
+	//GetSlips() []*Slip
 	CheckSuspension()
+	GetType() string
+	ToggleElig()
 }
 
 type Complaint struct {
