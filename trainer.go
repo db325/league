@@ -13,6 +13,7 @@ type Trainer struct {
 	Training  bool
 	Rating    float32
 	Eligible  *Eligible
+	LMType    string
 }
 
 func CreateTrainer(fname, lname string, age int, kind string, price float32) *Trainer {
@@ -56,4 +57,8 @@ func (trainer *Trainer) SetActive(yn bool) {
 		trainer.Eligible.LMActive = false
 	}
 
+}
+
+func (trainer *Trainer) GetType() string {
+	return trainer.LMType
 }

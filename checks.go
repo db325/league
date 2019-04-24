@@ -1,8 +1,11 @@
 package main
 
+//mport "errors"
 
-import "errors"
+func LevelCheck(lm1, lm2 LeagueMember) bool {
+	return lm1.GetLevel() > lm2.GetLevel()
+}
 
-func ()  {
-	
+func TypeCheck(lm1 LeagueMember) {
+
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type Commissioner struct {
 	Age          int
 	Complaints   []*Complaint
 	LeagueMember []*LeagueMember
+	LMType       string
 }
 
 func createCommish(fname, lname string) *Commissioner {
@@ -35,6 +37,7 @@ func (comish *Commissioner) Fine(lm *LeagueMember, amount float32, reason string
 func (commish *Commissioner) Suspend(lm LeagueMember, mins int, reason string) {
 
 	tm := time.Now()
+	//Creating time properties.
 	if mins > 30 {
 		mins = 30
 	} else if mins < 30 && mins > 90 {
@@ -59,7 +62,7 @@ func (commish *Commissioner) Suspend(lm LeagueMember, mins int, reason string) {
 		}
 		Slip.SetTimeLeft()
 		lm.SendSlip(Slip)
-		lm.SetActive(false)
+		lm.ToggleElig()
 		return
 
 	case 60:
@@ -73,7 +76,7 @@ func (commish *Commissioner) Suspend(lm LeagueMember, mins int, reason string) {
 		}
 		Slip.SetTimeLeft()
 		lm.SendSlip(Slip)
-		lm.SetActive(false)
+		lm.ToggleElig()
 		return
 
 	case 90:
@@ -86,24 +89,14 @@ func (commish *Commissioner) Suspend(lm LeagueMember, mins int, reason string) {
 			End:        hrHalf.Format(time.Kitchen),
 		}
 		Slip.SetTimeLeft()
-
 		lm.SendSlip(Slip)
-		lm.SetActive(false)
+		lm.ToggleElig()
 		return
 	default:
 		fmt.Println("you need to enter a multiple of 30 minutes. Not to exceed 1.5 hrs.")
 	}
 	lm.SetActive(false)
 
-}
-
-func checkType(lm LeagueMember) {
-	switch lm.(type) {
-	case *Athelete:
-		ath := lm
-		fmt.Println(ath)
-
-	}
 }
 
 //Returns a slice of stings. The first value [0]is the name of League member(Commissioner). The second value [1] is the age.
@@ -148,4 +141,8 @@ type Slip struct {
 func (slip *Slip) SetTimeLeft() {
 	now := time.Now()
 	slip.TimeLeft = slip.Time2Chech.Sub(now)
+}
+
+func (com *Commissioner) GetType() string {
+	return strings.ToLower(com.LMType)
 }
