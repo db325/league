@@ -2,9 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
-	"strings"
-	"time"
 )
 
 //***********************    BEGIN OWNER    ******************************************************************
@@ -18,10 +15,25 @@ type Owner struct {
 	Salary         float32
 	AccountBalance float32
 	Eligible       *Eligible
-	LMType         string
 }
 
 ////////////////////////////////////////////////////////////////////
+
+func createOwner(fname, lname, tname string) (*Owner, error) {
+	if fname == "" || lname == "" {
+		err := errors.New("You must enter a first and last name.")
+		return nil, err
+	} else {
+		owner := &Owner{
+
+			FirstName: fname,
+			LastName:  lname,
+		}
+		kl, _ := owner.CreateTeam(tname)
+		owner.Team = kl
+		return owner, nil
+	}
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -40,21 +52,6 @@ type Team struct {
 //***********************   END TEAM   ***********************************************************************
 //*
 //*
-func createOwner(fname, lname, tname string) (*Owner, error) {
-	if fname == "" || lname == "" {
-		err := errors.New("You must enter a first and last name.")
-		return nil, err
-	} else {
-		owner := &Owner{
-
-			FirstName: fname,
-			LastName:  lname,
-		}
-		kl, _ := owner.CreateTeam(tname)
-		owner.Team = kl
-		return owner, nil
-	}
-}
 
 //createTeam Returns a pointer to a Team struct, initialized with a name.
 func (owner *Owner) CreateTeam(name string) (*Team, error) {
@@ -67,52 +64,30 @@ func (owner *Owner) CreateTeam(name string) (*Team, error) {
 	}
 	owner.Eligible = Eligible
 
-	r := make(map[string]*Athelete)
-	c := make([]*Coach, 0)
-	p := make([]*Athelete, 0)
-	m := make([]*Message, 0)
-	u := make([]*Manager, 0)
+	m := make(map[string]*Athelete)
 	if name == "" {
 		err := errors.New("Enter a name.")
 		return nil, err
 	} else {
 		team := &Team{
-			Name:            name,
-			Roster:          r,
-			Coaches:         c,
-			Players:         p,
-			MessBoard:       m,
-			UpperManagement: u,
+			Name:   name,
+			Roster: m,
 		}
-
 		owner.Team = team
 		return team, nil
 	}
 
 }
 
-func (owner *Owner) Sign(gm *Manager) {
-	if gm.GetType() == "general manager" {
-		gm.TeamName = owner.Team.Name
-		gm.Team = owner.Team
-		owner.Team.UpperManagement = append(owner.Team.UpperManagement, gm)
-		sl := make([]*Slip, 0)
-		eligible := &Eligible{
-			Slips:      sl,
-			LMActive:   true,
-			Reason:     "",
-			ReturnDate: 0,
-		}
-		gm.Eligible = eligible
-	} else {
-		fmt.Println("You can only sign a GM.")
-	}
-
+func (owner *Owner) SignGM(gm *Manager) {
+	gm.Team = owner.Team
+	owner.Team.UpperManagement = append(owner.Team.UpperManagement, gm)
+	gm.TeamName = owner.Team.Name
 }
 
 ////////////////////////////////////////////////////////////////////
 
-func (owner *Owner) Pay() {
+func (owner *Owner) Pay(amount float32) {
 	PayAmount := owner.Salary / 12
 	owner.AccountBalance += PayAmount
 
@@ -171,85 +146,3 @@ func (owner *Owner) GetSlips() []*Slip {
 }
 
 ////////////////////////////////////////////////////////////////////
-func (owner *Owner) GetType() string {
-	return strings.ToLower(owner.LMType)
-}
-func (owner *Owner) Suspend(lm LeagueMember, mins float32, reason string) {
-	fivemin := time.Minute * 5
-	Slip := &Slip{
-		Time2Chech: time.Now().Add(fivemin),
-		Type:       Suspend,
-		Reason:     reason,
-		Start:      time.Now().Format(time.Kitchen),
-		SActive:    true,
-		End:        time.Now().Add(fivemin).Format(time.Kitchen),
-	}
-	Slip.SetTimeLeft()
-	lm.SendSlip(Slip)
-	lm.ToggleElig()
-}
-
-// 	if mins > 30 {
-// 		mins = 30
-// 	} else if mins > 30 && mins < 61 {
-// 		mins = 60
-// 	} else if mins > 60 {
-// 		mins = 90
-// 	}
-
-// 	tm := time.Now()
-// 	after30 := tm.Add(time.Minute * 30)
-// 	afterHr := tm.Add(time.Minute * 30 * 2)
-// 	hrHalf := tm.Add(time.Minute * 90)
-
-// 	switch mins {
-// 	case 30:
-// 		Slip := &Slip{
-// 			Time2Chech: after30,
-// 			Type:       Suspend,
-// 			Reason:     reason,
-// 			SActive:    true,
-// 			Start:      tm.Format(time.Kitchen),
-// 			End:        after30.Format(time.Kitchen),
-// 		}
-// 		lm.SendSlip(Slip)
-// 		lm.ToggleElig()
-// 		return
-
-// 	case 60:
-// 		Slip := &Slip{
-// 			Time2Chech: afterHr,
-// 			Type:       Suspend,
-// 			Reason:     reason,
-// 			SActive:    true,
-// 			Start:      tm.Format(time.Kitchen),
-// 			End:        afterHr.Format(time.Kitchen),
-// 		}
-// 		lm.SendSlip(Slip)
-// 		lm.ToggleElig()
-// 		return
-
-// 	case 90:
-// 		Slip := &Slip{
-// 			Time2Chech: hrHalf,
-// 			Type:       Suspend,
-// 			Reason:     reason,
-// 			SActive:    true,
-// 			Start:      tm.Format(time.Kitchen),
-// 			End:        tm.Format(time.Kitchen),
-// 		}
-// 		lm.SendSlip(Slip)
-// 		lm.ToggleElig()
-// 		return
-
-// 	default:
-// 		fmt.Println("Please say who you want to suspend, for how long, and the reason.")
-// 		return
-// 	}
-
-// }
-
-func (owner *Owner) ToggleElig() {
-	owner.Eligible.Slips[0].SActive = !owner.Eligible.Slips[0].SActive
-	owner.Eligible.LMActive = !owner.Eligible.LMActive
-}

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 //***********************    BEGIN COACH    ***********************************************************
@@ -11,13 +10,13 @@ import (
 //Defines COACH type to be used on/in leagues/teams.
 type Coach struct {
 	*Team
+
 	Salary         float32
-	Level          int
+	Level          float32
 	Atti           CAttributes
 	TeamName       string
 	AccountBalance float32
 	Eligible       *Eligible
-	LMType         string
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -83,48 +82,28 @@ func createCoach(Fname, Lname string) *Coach {
 ////////////////////////////////////////////////////////////////////
 
 //Sign function adds Athelete to a roster. It also makes the player.Team variable equal to team.Name by default.
-func (coach *Coach) Sign(player *Athelete, coach2 *Coach) {
-	if player == nil {
-		coach2.Team = coach.Team
-		eligible := &Eligible{
-			Slips:      make([]*Slip, 0),
-			LMActive:   true,
-			Reason:     "",
-			ReturnDate: 0,
-		}
-		coach.Eligible = eligible
-		coach.Team.Coaches = append(coach.Team.Coaches, coach2)
-
-	} else if coach2 == nil {
-
-		player.Atti.Team = coach.Team.Name
-		eligible := &Eligible{
-			Slips:      make([]*Slip, 0),
-			LMActive:   true,
-			Reason:     "",
-			ReturnDate: 0,
-		}
-		player.Eligible = eligible
-		player.TeamName = coach.TeamName
-		player.Team = coach.Team
-		player.Atti.Team = player.TeamName
-		coach.Team.Players = append(coach.Players, player)
-		coach.Team.Roster[player.Atti.Position] = player
-
-	}
+func (coach *Coach) Sign(name, pos string, team *Team, player *Athelete, jersey int) {
+	player.Team = coach.Team
+	//team.Players = append(team.Players, player)
+	nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
+	player.Atti.JerseyNum = jersey
+	player.Team = coach.Team
+	name = nm1
+	player = (player)
+	player.Team.Players = append(player.Team.Players, player)
+	player.Atti.Team = player.Team.Name
+	//player.SetActive(false)
 
 }
 
 ////////////////////////////////////////////////////////////////////
 
-func (coach *Coach) Cut(player *Athelete) {
-
-	//nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
-	player.Roster[player.Atti.Position] = nil
+func (coach *Coach) Cut(name, pos string, team *Team, player *Athelete) {
+	nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
+	name = nm1
+	team.Roster[pos] = nil
 	player.TeamName = "Free Agent"
-	player.Atti.Team = ""
 	player.Team = nil
-
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -146,16 +125,22 @@ func (coach *Coach) MakeTradeReq(requester *Coach, personPpl2Trade *Athelete, mo
 	}
 	approver.Atti.Requests = append(approver.Atti.Requests, TR)
 }
+func (coach *Coach) SetSalary(amount float32) {
+	coach.Salary = amount
+}
 
-////////////////////////////////////////////////////////////////////////
-//League Member Implementation
+//Pay updates AccountBalance.
+func (coach *Coach) Pay(amount float32) {
+	PayAmount := coach.Salary / 12
+	coach.AccountBalance += PayAmount
+}
+func (coach *Coach) Fine(amount float32) {
+	coach.AccountBalance = coach.AccountBalance - amount
+}
 func (coach *Coach) GetName() string {
 	name := coach.Atti.FirstName + " " + coach.Atti.LastName
 
 	return name
-}
-func (coach *Coach) SetSalary(amount float32) {
-	coach.Salary = amount
 }
 func (coach *Coach) MediaPost(t, m string, v bool) {
 	MP := &Message{
@@ -166,23 +151,28 @@ func (coach *Coach) MediaPost(t, m string, v bool) {
 	if v == true {
 		//IMPLEMENT LEAGUE BOARD
 	} else if v == false {
-		coach.Team.MessBoard = append(coach.Team.MessBoard, MP)
+		coach.Team.MessBoard = append(coach.Team.Posts, MP)
 
 	}
 
 }
-func (coach *Coach) SetActive(yn bool) {
-	coach.Eligible.LMActive = yn
-}
-func (coach *Coach) GetLevel() int {
+
+//////////////////////////////////////////////////////////////////
+func (coach *Coach) GetLevel() float32 {
 	return coach.Level
 }
-func (coach *Coach) Fine(amount float32) {
-	coach.AccountBalance = coach.AccountBalance - amount
+
+func (coach *Coach) CreateComplaint(from, about LeagueMember, commish *Commissioner, issue string) {
+	Complaint := &Complaint{
+		From:  from.GetName(),
+		About: about.GetName(),
+		Issue: issue,
+	}
+
+	commish.Complaints = append(commish.Complaints, Complaint)
 }
-func (coach *Coach) Pay() {
-	PayAmount := coach.Salary / 12
-	coach.AccountBalance += PayAmount
+func (coach *Coach) SetActive(yn bool) {
+	coach.Eligible.LMActive = yn
 }
 
 //SendSlip func appends a slip to the Coach's []*Slips
@@ -194,39 +184,5 @@ func (coach *Coach) GetSlips() []*Slip {
 
 	return coach.Eligible.Slips
 }
-func (coach *Coach) CheckSuspension() {
-	if coach.Eligible.LMActive == false {
-		fmt.Println("Coach Check")
-		for i := 0; i < len(coach.Eligible.Slips); i++ {
-			if coach.Eligible.Slips[i].SActive == true {
-				fmt.Println("Active Slip")
-				if coach.Eligible.Slips[i].Time2Chech.Sub(time.Now()) < 0.0 {
-					fmt.Println("Times Up!")
-					coach.ToggleElig()
-					coach.Eligible.Slips[i].SActive = false
-				} else {
-					fmt.Println("Banned Until ", coach.Eligible.Slips[i].End)
-				}
-			}
-		}
-	} else {
-		fmt.Println("Coach Active")
-	}
-}
-func (coach *Coach) GetType() string {
-	return strings.ToLower(coach.LMType)
-}
 
-/////////////////////////**********************/////////////////////////////////////////
-
-func (coach *Coach) CreateComplaint(from, about LeagueMember, commish *Commissioner, issue string) {
-	Complaint := &Complaint{
-		From:  from.GetName(),
-		About: about.GetName(),
-		Issue: issue,
-	}
-	commish.Complaints = append(commish.Complaints, Complaint)
-}
-func (coach *Coach) ToggleElig() {
-	coach.Eligible.LMActive = !coach.Eligible.LMActive
-}
+////////////////////////////////////////////////////////////////////

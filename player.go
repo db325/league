@@ -11,24 +11,27 @@ import (
 type Athelete struct {
 	*Team
 	Salary         float32
-	Level          int
+	Level          float32
 	Atti           Attributes
 	TeamName       string
 	AccountBalance float32
-	Eligible       *Eligible
-	LMType         string
+	Eligible       Eligible
 }
 
 ////////////////////////////////////////////////////////////////////
 
 //Creates an Athelete that must be initialized with First and Last name values. All other values are modified after player creation.
-//The default value for team is Free Agent until signed to a team.
-func createPlayer(fname, lname, pos string) *Athelete {
-
+//The default value for team is Undrafted if team field is empty
+func createPlayer(fname, lname, team string) *Athelete {
+	team = ""
+	if team == "" {
+		player1 := &Athelete{
+			TeamName: "Undrafted",
+		}
+		return player1
+	}
 	player1 := &Athelete{
-		LMType:   "Player",
-		TeamName: "Free Agent",
-		Eligible: &Eligible{
+		Eligible: Eligible{
 			Reason:     "",
 			Slips:      make([]*Slip, 10, 30),
 			LMActive:   true,
@@ -38,7 +41,6 @@ func createPlayer(fname, lname, pos string) *Athelete {
 		Atti: Attributes{
 			Firstname: fname,
 			Lastname:  lname,
-			Position:  pos,
 		},
 	}
 
@@ -73,27 +75,18 @@ func (player *Athelete) Train(trainer *Trainer) {
 
 ////////////////////////////////////////////////////////////////////
 
-func (player *Athelete) MediaPost(t, m string, v bool) {
-	Message := &Message{
-		Title:   t,
-		Message: m,
-		Visible: v,
-	}
-	if v == true {
-		//IMPLEMENT LEAGUE BOARD
-	} else if v == false {
-		player.Team.MessBoard = append(player.Team.MessBoard, Message)
-	}
+func (player *Athelete) MediaPost(message *Message, board *Board) {
+	board.Posts = append(board.Posts, message)
 
 }
 func (player1 *Athelete) SetSalary(amount float32) {
 	player1.Salary = amount
 }
 
-func (player *Athelete) GetLevel() int {
+func (player *Athelete) GetLevel() float32 {
 	return player.Level
 }
-func (player *Athelete) Pay() {
+func (player *Athelete) Pay(amount float32) {
 	PayAmount := player.Salary / 12
 	player.AccountBalance += PayAmount
 
@@ -108,6 +101,10 @@ func (player *Athelete) GetName() string {
 	name := player.Atti.Firstname + " " + player.Atti.Lastname
 	return name
 }
+
+////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////
 
 //Attribute struct belonging to all atheletes. Must call createPlayer.
 type Attributes struct {
@@ -143,56 +140,27 @@ func (player *Athelete) SetActive(yn bool) {
 }
 
 func (player *Athelete) SendSlip(slip *Slip) {
-	slip.SetTimeLeft()
 	player.Eligible.Slips = append(player.Eligible.Slips, slip)
 	return
 }
-
-// func (player *Athelete) GetSlips() []*Slip {
-// 	for _, v := range player.Eligible.Slips {
-// 		//
-// 		if v.Time2Chech == time.Now() {
-// 			//player.ToggleElig()
-// 			fmt.Println("from get slip")
-// 		}
-// 		v.SetTimeLeft()
-// 	}
-
-// 	player.CheckSuspension()
-// 	return player.Eligible.Slips
-
-// }
-func (player *Athelete) CheckSuspension() {
-
-	if player.Eligible.LMActive == false {
-		fmt.Println("just called")
-		for i := 0; i < len(player.Eligible.Slips); i++ {
-
-			if player.Eligible.Slips[i].SActive == true {
-				//player.Eligible.Slips[i].SetTimeLeft()
-				fmt.Println("true")
-				//check time
-				if player.Eligible.Slips[i].Time2Chech.Sub(time.Now()) < 0.0 {
-					//fmt.Println("times up!")
-					player.ToggleElig()
-					player.Eligible.Slips[i].SActive = false
-					player.Eligible.Slips[i].TimeLeft = 0.0
-					//fmt.Println("Active")
-				} else {
-					fmt.Println("Banned Until ", player.Eligible.Slips[i].End)
-				}
-			}
-		}
-	} else {
-		fmt.Println("Player Active")
+func (player *Athelete) GetSlips() []*Slip {
+	for _, v := range player.Eligible.Slips {
+		v.SetTimeLeft()
 	}
-}
 
-func (player *Athelete) GetType() string {
-	return player.LMType
+	return player.Eligible.Slips
+
 }
-func (player *Athelete) ToggleElig() {
-	player.Eligible.LMActive = !player.Eligible.LMActive
+func (player *Athelete) CheckSuspension() {
+	for i := 0; i < len(player.Eligible.Slips); i++ {
+		if player.Eligible.Slips[i].SActive == true {
+			now := time.Now()
+			player.Eligible.Slips[i].TimeLeft = player.Eligible.Slips[i].Time2Chech.Sub(now)
+			//CREATE CUSTOM ERRORS
+			fmt.Println("you cant do that because:", player.Eligible.Slips[i])
+
+		}
+	}
 
 }
 
