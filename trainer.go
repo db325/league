@@ -24,6 +24,8 @@ func CreateTrainer(fname, lname string, age int, kind string, price float32) *Tr
 		Kind:      kind,
 		Price:     price,
 	}
+	trainer.LMType = "trainer"
+	trainer.Eligible.LMActive = true
 	return trainer
 }
 
@@ -43,6 +45,7 @@ func (trainer *Trainer) GetKind() string {
 	return trainer.Kind
 }
 
+//Kinds of trainer.
 const (
 	SA = "Speed/Agilty"
 	SC = "Strength/Conditioning"

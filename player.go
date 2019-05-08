@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	//"strings"
 	"time"
 )
 
@@ -9,7 +10,9 @@ import (
 
 //Defines Athelete type to be used on/in leagues/teams.
 type Athelete struct {
+	*League
 	*Team
+	*Coach
 	Salary         float32
 	Level          int
 	Atti           Attributes
@@ -17,6 +20,11 @@ type Athelete struct {
 	AccountBalance float32
 	Eligible       *Eligible
 	LMType         string
+	Firstname      string
+	Lastname       string
+	Age            int
+	DOB            string
+	Height         float32
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -26,19 +34,19 @@ type Athelete struct {
 func createPlayer(fname, lname, pos string) *Athelete {
 
 	player1 := &Athelete{
-		LMType:   "Player",
-		TeamName: "Free Agent",
+
+		Firstname: fname,
+		Lastname:  lname,
+		LMType:    "player",
+		TeamName:  "Free Agent",
 		Eligible: &Eligible{
 			Reason:     "",
 			Slips:      make([]*Slip, 10, 30),
 			LMActive:   true,
 			ReturnDate: 0,
 		},
-		Team: nil,
 		Atti: Attributes{
-			Firstname: fname,
-			Lastname:  lname,
-			Position:  pos,
+			Position: pos,
 		},
 	}
 
@@ -54,7 +62,7 @@ func createPlayer(fname, lname, pos string) *Athelete {
 
 ////////////////////////////////////////////////////////////////////
 
-//implement train
+//Adjusts attributes based on Trainer type.
 func (player *Athelete) Train(trainer *Trainer) {
 	player.AccountBalance -= trainer.Price
 	switch trainer.Kind {
@@ -71,51 +79,53 @@ func (player *Athelete) Train(trainer *Trainer) {
 	}
 }
 
-////////////////////////////////////////////////////////////////////
-
+//Posts message to a message board.
 func (player *Athelete) MediaPost(t, m string, v bool) {
 	Message := &Message{
+		From:    player.GetName(),
 		Title:   t,
 		Message: m,
 		Visible: v,
 	}
 	if v == true {
 		//IMPLEMENT LEAGUE BOARD
+		player.League.MessBoard = append(player.League.MessBoard, Message)
 	} else if v == false {
 		player.Team.MessBoard = append(player.Team.MessBoard, Message)
 	}
 
 }
+
+//Sets salary variable.
 func (player1 *Athelete) SetSalary(amount float32) {
 	player1.Salary = amount
 }
 
+//Returns level.
 func (player *Athelete) GetLevel() int {
 	return player.Level
 }
+
+//Adds payamount to AccountBalance.
 func (player *Athelete) Pay() {
 	PayAmount := player.Salary / 12
 	player.AccountBalance += PayAmount
 
 }
 
-////////////////////////////////////////////////////////////////////
-
+//Subtracts amount from AccountBalance.
 func (player *Athelete) Fine(amount float32) {
-	player.SetSalary((player.Salary - amount))
+	player.AccountBalance -= amount
 }
+
+//Returns name.
 func (player *Athelete) GetName() string {
-	name := player.Atti.Firstname + " " + player.Atti.Lastname
+	name := player.Firstname + " " + player.Lastname
 	return name
 }
 
 //Attribute struct belonging to all atheletes. Must call createPlayer.
 type Attributes struct {
-	Firstname string
-	Lastname  string
-	Age       int
-	DOB       string
-	Height    float32
 	Weight    float32
 	Hometown  string
 	Sport     string
@@ -132,36 +142,14 @@ type Attributes struct {
 	Team      string
 }
 
-func (player *Athelete) SetActive(yn bool) {
-	if yn == true {
-		player.Eligible.LMActive = true
-
-	} else if yn == false {
-		player.Eligible.LMActive = false
-	}
-
-}
-
+//Puts a slip in Slips.
 func (player *Athelete) SendSlip(slip *Slip) {
 	slip.SetTimeLeft()
 	player.Eligible.Slips = append(player.Eligible.Slips, slip)
-	return
+
 }
 
-// func (player *Athelete) GetSlips() []*Slip {
-// 	for _, v := range player.Eligible.Slips {
-// 		//
-// 		if v.Time2Chech == time.Now() {
-// 			//player.ToggleElig()
-// 			fmt.Println("from get slip")
-// 		}
-// 		v.SetTimeLeft()
-// 	}
-
-// 	player.CheckSuspension()
-// 	return player.Eligible.Slips
-
-// }
+//Checks eligibilty.
 func (player *Athelete) CheckSuspension() {
 
 	if player.Eligible.LMActive == false {
@@ -169,15 +157,13 @@ func (player *Athelete) CheckSuspension() {
 		for i := 0; i < len(player.Eligible.Slips); i++ {
 
 			if player.Eligible.Slips[i].SActive == true {
-				//player.Eligible.Slips[i].SetTimeLeft()
 				fmt.Println("true")
 				//check time
 				if player.Eligible.Slips[i].Time2Chech.Sub(time.Now()) < 0.0 {
-					//fmt.Println("times up!")
 					player.ToggleElig()
 					player.Eligible.Slips[i].SActive = false
 					player.Eligible.Slips[i].TimeLeft = 0.0
-					//fmt.Println("Active")
+
 				} else {
 					fmt.Println("Banned Until ", player.Eligible.Slips[i].End)
 				}
@@ -188,14 +174,15 @@ func (player *Athelete) CheckSuspension() {
 	}
 }
 
+//Returns league member role
 func (player *Athelete) GetType() string {
 	return player.LMType
 }
+
+//Toggles eligibilty.
 func (player *Athelete) ToggleElig() {
 	player.Eligible.LMActive = !player.Eligible.LMActive
 
 }
-
-////////////////////////////////////////////////////////////////////
 
 //***********************    END ATHELETE   ******************************************************************

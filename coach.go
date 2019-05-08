@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 //Defines COACH type to be used on/in leagues/teams.
 type Coach struct {
 	*Team
+	*League
 	Salary         float32
 	Level          int
 	Atti           CAttributes
@@ -18,13 +20,12 @@ type Coach struct {
 	AccountBalance float32
 	Eligible       *Eligible
 	LMType         string
+	FirstName      string
+	LastName       string
 }
 
-////////////////////////////////////////////////////////////////////
 // Values for Coach object
 type CAttributes struct {
-	FirstName        string
-	LastName         string
 	CoachingStyle    string
 	PlayCallAbility  float32
 	SituationalAware float32
@@ -36,32 +37,25 @@ type CAttributes struct {
 	Requests         []*TradeRequest
 }
 
-////////////////////////////////////////////////////////////////////
-
-//*********************    Begin TradeReq  ***********************************************************************
+//*********************    Begin TradeReq  **************************************************************
+//TradeReequest type
 type TradeRequest struct {
-	Coach       *Coach
+	From        string
 	ProposeThis *Athelete
-	AndOrThis1  float32
 	ForThis     *Athelete
-	AndOrThis2  float32
 	Approved    bool
 }
 
-func (tr *TradeRequest) ShowRequest() string {
-	req := fmt.Sprintf(`
-	 					Trade Request     
-	 					Coach: %v proposes a trade 
-
-						%v And Or  %v
-
-	 					For This: %v And Or %v
-
-	 
-	 					Approved? :%v
-
-`, strings.ToUpper(tr.Coach.Atti.FirstName+" "+tr.Coach.Atti.LastName), strings.ToUpper(tr.ProposeThis.Atti.Firstname+" "+tr.ProposeThis.Atti.Lastname), float32(tr.AndOrThis1), strings.ToUpper(tr.ForThis.Atti.Firstname+" "+tr.ForThis.Atti.Lastname), tr.AndOrThis2, false)
-	return req
+//ShowRequest func returns a formatted string of the request.
+func ShowReq(reqs []*TradeRequest) error {
+	if len(reqs) == 0 {
+		err := errors.New("Sorry, nothing to show here")
+		return err
+	}
+	for _, req := range reqs {
+		fmt.Printf("***REQUEST***\n%v Proposes trade below\n**********\nTrade: %v\nFor: %v\n%v", req.From, req.ProposeThis.GetName(), req.ForThis.GetName())
+	}
+	return nil
 }
 
 //*********************************************************************************
@@ -69,117 +63,94 @@ func (tr *TradeRequest) ShowRequest() string {
 //you will not set the team property. If left emty, it will default to n/a.
 func createCoach(Fname, Lname string) *Coach {
 
-	coach := &Coach{
-
-		Atti: CAttributes{
-			FirstName: Fname,
-			LastName:  Lname,
-		},
+	Coach := &Coach{
+		FirstName: Fname,
+		LastName:  Lname,
 	}
-
-	return coach
+	return Coach
 }
 
-////////////////////////////////////////////////////////////////////
+//Sign function adds Athelete to a roster. It also initializes the player.Eligible struct's values to their
+//zero-values except LMActive. LmActive is set to true as well as connecting all team/player fields.
+func (coach *Coach) Sign(player *Athelete) {
+	player.League = coach.League
 
-//Sign function adds Athelete to a roster. It also makes the player.Team variable equal to team.Name by default.
-func (coach *Coach) Sign(player *Athelete, coach2 *Coach) {
-	if player == nil {
-		coach2.Team = coach.Team
-		eligible := &Eligible{
-			Slips:      make([]*Slip, 0),
-			LMActive:   true,
-			Reason:     "",
-			ReturnDate: 0,
-		}
-		coach.Eligible = eligible
-		coach.Team.Coaches = append(coach.Team.Coaches, coach2)
-
-	} else if coach2 == nil {
-
-		player.Atti.Team = coach.Team.Name
-		eligible := &Eligible{
-			Slips:      make([]*Slip, 0),
-			LMActive:   true,
-			Reason:     "",
-			ReturnDate: 0,
-		}
-		player.Eligible = eligible
-		player.TeamName = coach.TeamName
-		player.Team = coach.Team
-		player.Atti.Team = player.TeamName
-		coach.Team.Players = append(coach.Players, player)
-		coach.Team.Roster[player.Atti.Position] = player
-
+	player.Eligible = &Eligible{
+		Slips:      make([]*Slip, 0),
+		Reason:     "",
+		ReturnDate: 0,
+		LMActive:   true,
 	}
-
+	player.Team = coach.Team
+	player.Atti.Team = coach.TeamName
+	player.TeamName = player.Atti.Team
+	coach.Team.Players = append(coach.Players, player)
+	coach.Roster[player.Atti.Position] = player
+	player.Coach = coach
 }
 
-////////////////////////////////////////////////////////////////////
-
+//Removes player from team.
 func (coach *Coach) Cut(player *Athelete) {
 
 	//nm1 := fmt.Sprintf("%s\t%s", player.Atti.Firstname, player.Atti.Lastname)
-	player.Roster[player.Atti.Position] = nil
-	player.TeamName = "Free Agent"
-	player.Atti.Team = ""
-	player.Team = nil
+
+	CutPlayer(coach.Team, player)
 
 }
 
-////////////////////////////////////////////////////////////////////
-
-func (coach *Coach) GiveSpeach(speach string) string {
-	return speach
-}
-
-////////////////////////////////////////////////////////////////////
-
-func (coach *Coach) MakeTradeReq(requester *Coach, personPpl2Trade *Athelete, money1 float32, money2 float32, approve bool, approver *Coach, oneOrMore *Athelete) {
+//***Implement accepted and rejected requests.****
+//Makes request and sends to coach.
+func (coach *Coach) MakeTradeReq(person *Athelete, oneOrMore *Athelete) {
 	TR := &TradeRequest{
-		Coach:       requester,
-		ProposeThis: personPpl2Trade,
-		AndOrThis1:  money1,
+		From:        coach.GetName(),
+		ProposeThis: person,
 		ForThis:     oneOrMore,
-		AndOrThis2:  money2,
 		Approved:    false,
 	}
-	approver.Atti.Requests = append(approver.Atti.Requests, TR)
+	oneOrMore.Coach.Atti.Requests = append(oneOrMore.Coach.Atti.Requests, TR)
 }
 
-////////////////////////////////////////////////////////////////////////
 //League Member Implementation
 func (coach *Coach) GetName() string {
-	name := coach.Atti.FirstName + " " + coach.Atti.LastName
+	name := coach.FirstName + " " + coach.LastName
 
-	return name
+	return strings.ToUpper(name)
 }
+
+//Sets salary variable.
 func (coach *Coach) SetSalary(amount float32) {
 	coach.Salary = amount
 }
+
+//Makes a post to a message board.
 func (coach *Coach) MediaPost(t, m string, v bool) {
 	MP := &Message{
+		From:    coach.GetName(),
 		Title:   t,
 		Message: m,
 		Visible: v,
 	}
 	if v == true {
 		//IMPLEMENT LEAGUE BOARD
+		coach.League.MessBoard = append(coach.League.MessBoard, MP)
 	} else if v == false {
 		coach.Team.MessBoard = append(coach.Team.MessBoard, MP)
 
 	}
 
 }
-func (coach *Coach) SetActive(yn bool) {
-	coach.Eligible.LMActive = yn
-}
+
+//Returns level variable.
 func (coach *Coach) GetLevel() int {
 	return coach.Level
 }
+
+//Subtracts amount from AccountBalance.
 func (coach *Coach) Fine(amount float32) {
 	coach.AccountBalance = coach.AccountBalance - amount
 }
+
+//Adds payamount to AccountBalance.
 func (coach *Coach) Pay() {
 	PayAmount := coach.Salary / 12
 	coach.AccountBalance += PayAmount
@@ -190,10 +161,7 @@ func (coach *Coach) SendSlip(slip *Slip) {
 	coach.Eligible.Slips = append(coach.Eligible.Slips, slip)
 }
 
-func (coach *Coach) GetSlips() []*Slip {
-
-	return coach.Eligible.Slips
-}
+//Checks eligibility.
 func (coach *Coach) CheckSuspension() {
 	if coach.Eligible.LMActive == false {
 		fmt.Println("Coach Check")
@@ -213,20 +181,18 @@ func (coach *Coach) CheckSuspension() {
 		fmt.Println("Coach Active")
 	}
 }
+
+//Returns league member role.
 func (coach *Coach) GetType() string {
-	return strings.ToLower(coach.LMType)
+	return strings.ToUpper(coach.LMType)
 }
 
-/////////////////////////**********************/////////////////////////////////////////
-
-func (coach *Coach) CreateComplaint(from, about LeagueMember, commish *Commissioner, issue string) {
-	Complaint := &Complaint{
-		From:  from.GetName(),
-		About: about.GetName(),
-		Issue: issue,
-	}
-	commish.Complaints = append(commish.Complaints, Complaint)
-}
+//Toggles eligibilty.
 func (coach *Coach) ToggleElig() {
 	coach.Eligible.LMActive = !coach.Eligible.LMActive
+}
+
+//Returns League.
+func (coach *Coach) LeagueInfo() *League {
+	return coach.League
 }

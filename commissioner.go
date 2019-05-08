@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -8,39 +9,84 @@ import (
 
 //***********************    BEGIN COMMISSIONER    ***********************************************************
 type Commissioner struct {
-	Level        float32
-	FirstName    string
-	LastName     string
-	Age          int
-	Complaints   []*Complaint
-	LeagueMember []*LeagueMember
-	LMType       string
+	*League
+	Level          int
+	FirstName      string
+	LastName       string
+	Age            int
+	Complaints     []*Complaint
+	LeagueMember   []LeagueMember
+	LMType         string
+	Salary         float32
+	AccountBalance float32
+	Eligible       *Eligible
 }
 
+//Create a Commissioner.
 func createCommish(fname, lname string) *Commissioner {
 
 	commish := &Commissioner{
+
 		FirstName: fname,
 		LastName:  lname,
+		//League
 	}
+	Elig := &Eligible{
+		Reason:     "",
+		LMActive:   true,
+		Slips:      make([]*Slip, 0),
+		ReturnDate: 0,
+	}
+	commish.Eligible = Elig
 	return commish
 }
 
-func (comish *Commissioner) Fine(lm *LeagueMember, amount float32, reason string) string {
-	var lm1 LeagueMember
-	lm1 = *lm
-	lm1.Fine(amount)
-	return fmt.Sprintf("You've been fined %d by the commisioner: %s", amount, reason)
+//Func AddOwner adds owner to league. If there is a team with the same name as the owner, err will not be nil.
+func (com *Commissioner) AddOwner(own *Owner) error {
+	var err = errors.New("")
+	for i := 0; i < len(com.League.Teams); i++ {
+		if own.League.Teams[i].Name == own.Team.Name {
+			err1 := errors.New("Team already exists. Please try another name.")
+			err = err1
+			return err
+		}
+
+	}
+	own.League = com.League
+	com.League.Owners = append(com.League.Owners, own)
+	return nil
+
+}
+
+//Func GetName returns a string of the first and last name.
+func (comish *Commissioner) GetName() string {
+	name := comish.FirstName + " " + comish.LastName
+	return name
+}
+
+//Func MediaPost posts a Message to a messageboard. Err is nil if the Message posts successfully.
+func (commish *Commissioner) MediaPost(t, m string, v bool) (*Message, error) {
+	Msg := &Message{
+		Title:   t,
+		Message: m,
+		Visible: v,
+	}
+	if v == true {
+		commish.League.MessBoard = append(commish.League.MessBoard, Msg)
+		return Msg, nil
+	} else {
+		return nil, errors.New("Post was unsuccessful.")
+	}
 }
 
 //Suspend suspends a lm for a set number of hours/days
 func (commish *Commissioner) Suspend(lm LeagueMember, mins int, reason string) {
-
+	//getting current time.
 	tm := time.Now()
 	//Creating time properties.
-	if mins > 30 {
+	if mins <= 30 {
 		mins = 30
-	} else if mins < 30 && mins > 90 {
+	} else if mins > 30 && mins < 90 {
 		mins = 60
 	} else {
 		mins = 90
@@ -95,22 +141,73 @@ func (commish *Commissioner) Suspend(lm LeagueMember, mins int, reason string) {
 	default:
 		fmt.Println("you need to enter a multiple of 30 minutes. Not to exceed 1.5 hrs.")
 	}
-	lm.SetActive(false)
 
 }
 
-//Returns a slice of stings. The first value [0]is the name of League member(Commissioner). The second value [1] is the age.
-func (comish *Commissioner) GetName() string {
-	name := comish.FirstName + " " + comish.LastName
-	return name
-}
-
-func (commish *Commissioner) GetLevel() float32 {
+func (commish *Commissioner) GetLevel() int {
 	return commish.Level
 }
 
-//*
-//*
+//Func GetType returns a string value for the league member's role in the league.
+func (com *Commissioner) GetType() string {
+	return strings.ToLower(com.LMType)
+
+}
+
+//SetSalary sets salary variable in com struct.
+func (commish *Commissioner) SetSalary(amount float32) {
+	commish.Salary = amount
+
+}
+
+//Adds payamount into AccountBalance.
+func (commish *Commissioner) Pay() {
+	payAmount := commish.Salary / 12
+	commish.AccountBalance += payAmount
+}
+
+//Subtracts amount from AccountBalance.
+func (commish *Commissioner) Fine(amount float32) {
+	commish.AccountBalance -= amount
+}
+
+// MAY GET RID OF>>>>> SetActive(yn bool)
+// func (commish *Commissioner) Fined(amount float32) {
+// 	commish.AccountBalance -= amount
+
+// }
+
+//Toggles eligible status.
+func (commish *Commissioner) ToggleElig() {
+	commish.Eligible.LMActive = !commish.Eligible.LMActive
+}
+
+//Puts a Slip in Slips
+func (commish *Commissioner) SendSlip(slip *Slip) {
+	commish.Eligible.Slips = append(commish.Eligible.Slips, slip)
+}
+
+//Check Suspension.
+func (commish *Commissioner) CheckSuspension() {
+	if commish.Eligible.LMActive == false {
+		for i := 0; i < len(commish.Eligible.Slips); i++ {
+			if commish.Eligible.Slips[i].SActive == true {
+				if commish.Eligible.Slips[i].Time2Chech.Sub(time.Now()) < 0.0 {
+					commish.ToggleElig()
+					commish.Eligible.Slips[i].SActive = false
+					commish.Eligible.Slips[i].TimeLeft = 0.0
+				} else {
+					//MAY NEED TO CHANGE TO SPRINTF IN THE FUTURE
+					fmt.Println("Banned Until ", commish.Eligible.Slips[i].End)
+				}
+			}
+		}
+	} else {
+		fmt.Println("Commish Active")
+	}
+}
+
+//Slip struct
 type Slip struct {
 	Time2Chech time.Time
 
@@ -123,26 +220,8 @@ type Slip struct {
 	TimeLeft time.Duration
 }
 
-// func (slip *Slip) Show() *Slip {
-// 	//checkTime(slip)
-// 	// return fmt.Sprintf(`
-// 	// Type:   %s
-// 	// Reason: %s
-// 	// Slip Active: %v
-// 	// Start: %v   ComeBack:%v
-// 	// Time Left:%v
-// 	// time show func called: %v
-
-// 	// `, slip.Type, slip.Reason, slip.SActive, slip.Start, slip.End, slip.TimeLeft, time.Now())
-// 	return slip
-
-// }
-
+//Sets time left on active Ticket.
 func (slip *Slip) SetTimeLeft() {
 	now := time.Now()
 	slip.TimeLeft = slip.Time2Chech.Sub(now)
-}
-
-func (com *Commissioner) GetType() string {
-	return strings.ToLower(com.LMType)
 }
